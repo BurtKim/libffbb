@@ -26,7 +26,6 @@
 							<tool id="com.qnx.qcc.tool.compiler.309737044" name="QCC Compiler" superClass="com.qnx.qcc.tool.compiler">
 								<option id="com.qnx.qcc.option.compiler.optlevel.1831694497" name="Optimization Level" superClass="com.qnx.qcc.option.compiler.optlevel" value="com.qnx.qcc.option.compiler.optlevel.0" valueType="enumerated"/>
 								<option id="com.qnx.qcc.option.compiler.includePath.89589992" name="Include Directories (-I)" superClass="com.qnx.qcc.option.compiler.includePath" valueType="includePath">
-									<listOptionValue builtIn="false" value="${QNX_TARGET}/usr/include/freetype2"/>
 									<listOptionValue builtIn="false" value="${QNX_TARGET}/../target-override/usr/include"/>
 								</option>
 								<inputType id="com.qnx.qcc.inputType.compiler.1725091119" superClass="com.qnx.qcc.inputType.compiler"/>
@@ -65,7 +64,6 @@
 							<tool id="com.qnx.qcc.tool.compiler.1509784452" name="QCC Compiler" superClass="com.qnx.qcc.tool.compiler">
 								<option id="com.qnx.qcc.option.compiler.optlevel.478960153" name="Optimization Level" superClass="com.qnx.qcc.option.compiler.optlevel" value="com.qnx.qcc.option.compiler.optlevel.0" valueType="enumerated"/>
 								<option id="com.qnx.qcc.option.compiler.includePath.1317811458" name="Include Directories (-I)" superClass="com.qnx.qcc.option.compiler.includePath" valueType="includePath">
-									<listOptionValue builtIn="false" value="${QNX_TARGET}/usr/include/freetype2"/>
 									<listOptionValue builtIn="false" value="${QNX_TARGET}/../target-override/usr/include"/>
 								</option>
 								<inputType id="com.qnx.qcc.inputType.compiler.747977768" superClass="com.qnx.qcc.inputType.compiler"/>
@@ -104,7 +102,6 @@
 							<tool id="com.qnx.qcc.tool.compiler.1640686773" name="QCC Compiler" superClass="com.qnx.qcc.tool.compiler">
 								<option id="com.qnx.qcc.option.compiler.optlevel.1469994412" name="Optimization Level" superClass="com.qnx.qcc.option.compiler.optlevel" value="com.qnx.qcc.option.compiler.optlevel.0" valueType="enumerated"/>
 								<option id="com.qnx.qcc.option.compiler.includePath.1007554773" name="Include Directories (-I)" superClass="com.qnx.qcc.option.compiler.includePath" valueType="includePath">
-									<listOptionValue builtIn="false" value="${QNX_TARGET}/usr/include/freetype2"/>
 									<listOptionValue builtIn="false" value="${QNX_TARGET}/../target-override/usr/include"/>
 								</option>
 								<inputType id="com.qnx.qcc.inputType.compiler.470758916" superClass="com.qnx.qcc.inputType.compiler"/>
@@ -143,7 +140,6 @@
 							<tool id="com.qnx.qcc.tool.compiler.2145770153" name="QCC Compiler" superClass="com.qnx.qcc.tool.compiler">
 								<option id="com.qnx.qcc.option.compiler.optlevel.1959761028" name="Optimization Level" superClass="com.qnx.qcc.option.compiler.optlevel" value="com.qnx.qcc.option.compiler.optlevel.0" valueType="enumerated"/>
 								<option id="com.qnx.qcc.option.compiler.includePath.653040811" name="Include Directories (-I)" superClass="com.qnx.qcc.option.compiler.includePath" valueType="includePath">
-									<listOptionValue builtIn="false" value="${QNX_TARGET}/usr/include/freetype2"/>
 									<listOptionValue builtIn="false" value="${QNX_TARGET}/../target-override/usr/include"/>
 								</option>
 								<inputType id="com.qnx.qcc.inputType.compiler.1920292159" superClass="com.qnx.qcc.inputType.compiler"/>

@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = ffcamapi
 
-#CONFIG += qt warn_on debug_and_release cascades
+CONFIG += qt warn_on debug_and_release cascades
 
 # required libs when using this library:
 # device { ARCH=arm }
