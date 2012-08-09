@@ -2,7 +2,11 @@ TEMPLATE = lib
 TARGET = ffcamapi
 
 #CONFIG += qt warn_on debug_and_release cascades
-#LIBS += -lcamapi -lscreen -L../lib -lavcodec -lavformat -lavutil
+
+# required libs when using this library:
+# device { ARCH=arm }
+# simulator { ARCH=x86 }
+# LIBS += -lcamapi -lscreen -L../lib/$${ARCH} -lavcodec -lavformat -lavutil
 
 INCLUDEPATH += ../src ../include
 SOURCES += ../src/*.cpp
