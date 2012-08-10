@@ -18,57 +18,37 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+typedef struct
+{
+    bool running;
+    pthread_mutex_t reading_mutex;
+    pthread_cond_t read_cond;
+    int frame_count;
+    std::deque<camera_buffer_t*> frames;
+} ffcamera_reserved;
+
 void* encoding_thread(void* arg);
 
 void ffcamera_init(ffcamera_context *ffc_context)
 {
-    ffc_context->fd = 0;
-    ffc_context->width = 0;
-    ffc_context->height = 0;
     ffc_context->codec_context = NULL;
-    ffc_context->frame_count = 0;
-    ffc_context->running = true;
-    ffc_context->frames.clear();
-    pthread_mutex_init(&ffc_context->reading_mutex, 0);
-    pthread_cond_init(&ffc_context->read_cond, 0);
+    ffc_context->fd = 0;
+    ffc_context->write_callback = NULL;
+
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) malloc(sizeof(ffcamera_reserved));
+    ffc_context->reserved = ffc_reserved;
+    ffc_reserved->frame_count = 0;
+    ffc_reserved->running = true;
+    ffc_reserved->frames.clear();
+
+    pthread_mutex_init(&ffc_reserved->reading_mutex, 0);
+    pthread_cond_init(&ffc_reserved->read_cond, 0);
 }
 
-/**
- * codec_context MUST already be set
- */
-ffcamera_error ffcamera_open(ffcamera_context *ffc_context)
+ffcamera_error ffcamera_default_codec(enum CodecID codec_id,
+        int width, int height, AVCodecContext **codec_context)
 {
-    if (!ffc_context->codec_context) return FFCAMERA_NO_CODEC_SPECIFIED;
-    return ffcamera_open(ffc_context, CODEC_ID_NONE);
-}
-
-/**
- * enum CodecID codec_id = CODEC_ID_MPEG2VIDEO;
- */
-ffcamera_error ffcamera_open(ffcamera_context *ffc_context, enum CodecID codec_id)
-{
-    if (ffc_context->running) return FFCAMERA_ALREADY_RUNNING;
-
-    int width = ffc_context->width;
-    int height = ffc_context->height;
     if (width <= 0 || height <= 0) return FFCAMERA_INVALID_DIMENSIONS;
-
-    if (ffc_context->fd <= 0) return FFCAMERA_INVALID_FILE_DESCRIPTOR;
-
-    AVCodecContext *codec_context = ffc_context->codec_context;
-
-    // codec id was not specified and a context has not been set yet
-    if (codec_id == CODEC_ID_NONE && !codec_context) return FFCAMERA_NO_CODEC_SPECIFIED;
-
-    // codec context is already set and matches the codec id
-    if (codec_context && codec_context->codec_id == codec_id) return FFCAMERA_OK;
-
-    if (codec_context)
-    {
-        avcodec_close(codec_context);
-        av_free(codec_context);
-        codec_context = ffc_context->codec_context = NULL;
-    }
 
     AVCodec *codec = avcodec_find_encoder(codec_id);
 
@@ -79,22 +59,22 @@ ffcamera_error ffcamera_open(ffcamera_context *ffc_context, enum CodecID codec_i
         if (!codec) return FFCAMERA_CODEC_NOT_FOUND;
     }
 
-    codec_context = avcodec_alloc_context3(codec);
-    codec_context->pix_fmt = PIX_FMT_YUV420P;
-    codec_context->width = width;
-    codec_context->height = height;
-    codec_context->bit_rate = 400000;
-    codec_context->time_base.num = 1;
-    codec_context->time_base.den = 30;
-    codec_context->ticks_per_frame = 2;
-    codec_context->gop_size = 15;
-    codec_context->colorspace = AVCOL_SPC_SMPTE170M;
-    codec_context->thread_count = 2;
+    AVCodecContext *_codec_context = avcodec_alloc_context3(codec);
+    _codec_context->pix_fmt = PIX_FMT_YUV420P;
+    _codec_context->width = width;
+    _codec_context->height = height;
+    _codec_context->bit_rate = 400000;
+    _codec_context->time_base.num = 1;
+    _codec_context->time_base.den = 30;
+    _codec_context->ticks_per_frame = 2;
+    _codec_context->gop_size = 15;
+    _codec_context->colorspace = AVCOL_SPC_SMPTE170M;
+    _codec_context->thread_count = 2;
 
-    int codec_open = avcodec_open2(codec_context, codec, NULL);
+    int codec_open = avcodec_open2(_codec_context, codec, NULL);
     if (codec_open < 0) return FFCAMERA_COULD_NOT_OPEN_CODEC;
 
-    ffc_context->codec_context = codec_context;
+    *codec_context = _codec_context;
 
     return FFCAMERA_OK;
 }
@@ -110,38 +90,43 @@ ffcamera_error ffcamera_close(ffcamera_context *ffc_context)
         codec_context = ffc_context->codec_context = NULL;
     }
 
-    pthread_mutex_destroy(&ffc_context->reading_mutex);
-    pthread_cond_destroy(&ffc_context->read_cond);
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) ffc_context->reserved;
+    pthread_mutex_destroy(&ffc_reserved->reading_mutex);
+    pthread_cond_destroy(&ffc_reserved->read_cond);
 
     return FFCAMERA_OK;
 }
 
 ffcamera_error ffcamera_start(ffcamera_context *ffc_context)
 {
-    if (ffc_context->running) return FFCAMERA_ALREADY_RUNNING;
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) ffc_context->reserved;
+    if (!ffc_reserved) return FFCAMERA_NOT_INITIALIZED;
+    if (ffc_reserved->running) return FFCAMERA_ALREADY_RUNNING;
     if (!ffc_context->codec_context) return FFCAMERA_NO_CODEC_SPECIFIED;
 
-    ffc_context->frame_count = 0;
+    ffc_reserved->frame_count = 0;
 
     pthread_t pthread;
     pthread_create(&pthread, 0, &encoding_thread, ffc_context);
 
-    ffc_context->running = true;
+    ffc_reserved->running = true;
 
     return FFCAMERA_OK;
 }
 
 ffcamera_error ffcamera_stop(ffcamera_context *ffc_context)
 {
-    if (ffc_context->running) return FFCAMERA_ALREADY_STOPPED;
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) ffc_context->reserved;
+    if (!ffc_reserved) return FFCAMERA_NOT_INITIALIZED;
+    if (ffc_reserved->running) return FFCAMERA_ALREADY_STOPPED;
 
-    ffc_context->running = false;
-    pthread_cond_signal(&ffc_context->read_cond);
+    ffc_reserved->running = false;
+    pthread_cond_signal(&ffc_reserved->read_cond);
 
     return FFCAMERA_OK;
 }
 
-ssize_t write_all(int fd, uint8_t *buf, int size)
+ssize_t write_all(int fd, const uint8_t *buf, ssize_t size)
 {
     ssize_t i = 0;
     do
@@ -157,10 +142,11 @@ ssize_t write_all(int fd, uint8_t *buf, int size)
 void* encoding_thread(void* arg)
 {
     ffcamera_context* ffc_context = (ffcamera_context*) arg;
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) ffc_context->reserved;
 
     int fd = ffc_context->fd;
     AVCodecContext *codec_context = ffc_context->codec_context;
-    std::deque<camera_buffer_t*> frames = ffc_context->frames;
+    std::deque<camera_buffer_t*> frames = ffc_reserved->frames;
 
     int encode_buffer_len = 10000000;
     uint8_t *encode_buffer = (uint8_t *) av_malloc(encode_buffer_len);
@@ -171,20 +157,20 @@ void* encoding_thread(void* arg)
     int got_packet;
     int success;
 
-    while (ffc_context->running || !frames.empty())
+    while (ffc_reserved->running || !frames.empty())
     {
         if (frames.empty())
         {
-            pthread_mutex_lock(&ffc_context->reading_mutex);
-            pthread_cond_wait(&ffc_context->read_cond, &ffc_context->reading_mutex);
-            pthread_mutex_unlock(&ffc_context->reading_mutex);
+            pthread_mutex_lock(&ffc_reserved->reading_mutex);
+            pthread_cond_wait(&ffc_reserved->read_cond, &ffc_reserved->reading_mutex);
+            pthread_mutex_unlock(&ffc_reserved->reading_mutex);
             continue;
         }
 
         camera_buffer_t *buf = frames.front();
         frames.pop_front();
 
-        int frame_position = ffc_context->frame_count++;
+        int frame_position = ffc_reserved->frame_count++;
 
         int64_t uv_offset = buf->framedesc.nv12.uv_offset;
         uint32_t height = buf->framedesc.nv12.height;
@@ -210,12 +196,9 @@ void* encoding_thread(void* arg)
 
         if (success == 0 && got_packet > 0)
         {
-            int size = write_all(fd, packet.data, packet.size);
-            if (size == packet.size) printf("write frame %d (size=%5d)\n", frame_position, packet.size);
-            else printf("FAILED write frame %d (size=%5d)\n", frame_position, packet.size);
+            if (!ffc_context->write_callback) write_all(fd, packet.data, packet.size);
+            else ffc_context->write_callback(packet.data, packet.size);
         }
-        else printf("skipped write frame: %d\n", frame_position);
-        fflush(stdout);
 
         free(buf->framebuf);
         free(buf);
@@ -227,7 +210,7 @@ void* encoding_thread(void* arg)
 
     do
     {
-        int frame_position = ffc_context->frame_count++;
+        int frame_position = ffc_reserved->frame_count++;
 
         // reset the AVPacket
         av_init_packet(&packet);
@@ -239,10 +222,8 @@ void* encoding_thread(void* arg)
 
         if (success == 0 && got_packet > 0)
         {
-            int size = write_all(fd, packet.data, packet.size);
-            if (size == packet.size) printf("write (delayed) frame %d (size=%5d)\n", frame_position, packet.size);
-            else printf("FAILED write (delayed) frame %d (size=%5d)\n", frame_position, packet.size);
-            fflush(stdout);
+            if (!ffc_context->write_callback) write_all(fd, packet.data, packet.size);
+            else ffc_context->write_callback(packet.data, packet.size);
         }
     }
     while (got_packet > 0);
@@ -253,3 +234,54 @@ void* encoding_thread(void* arg)
 
     return 0;
 }
+
+void ffcamera_vfcallback(camera_handle_t handle, camera_buffer_t* buf, void* arg)
+{
+    if (buf->frametype != CAMERA_FRAMETYPE_NV12) return;
+
+    ffcamera_context* ffc_context = (ffcamera_context*) arg;
+    ffcamera_reserved *ffc_reserved = (ffcamera_reserved*) ffc_context->reserved;
+
+    if (!ffc_reserved || !ffc_reserved->running) return;
+
+    int64_t uv_offset = buf->framedesc.nv12.uv_offset;
+    uint32_t height = buf->framedesc.nv12.height;
+    uint32_t width = buf->framedesc.nv12.width;
+    uint32_t stride = buf->framedesc.nv12.stride;
+
+    uint32_t _stride = width; // remove stride
+    int64_t _uv_offset = _stride * height; // recompute and pack planes
+
+    camera_buffer_t* _buf = (camera_buffer_t*) malloc(buf->framesize);
+    memcpy(_buf, buf, buf->framesize);
+    _buf->framedesc.nv12.stride = _stride;
+    _buf->framedesc.nv12.uv_offset = _uv_offset;
+    _buf->framebuf = (uint8_t*) malloc(width * height * 3 / 2);
+
+    for (uint32_t i = 0; i < height; i++)
+    {
+        int64_t doff = i * _stride;
+        int64_t soff = i * stride;
+        memcpy(&_buf->framebuf[doff], &buf->framebuf[soff], width);
+    }
+
+    uint8_t *srcuv = &buf->framebuf[uv_offset];
+    uint8_t *destu = &_buf->framebuf[_uv_offset];
+    uint8_t *destv = &_buf->framebuf[_uv_offset + ((width * height) / 4)];
+
+    for (uint32_t i = 0; i < height / 2; i++)
+    {
+        uint8_t* curuv = srcuv;
+        for (uint32_t j = 0; j < width / 2; j++)
+        {
+            *destu++ = *curuv++;
+            *destv++ = *curuv++;
+        }
+        srcuv += stride;
+    }
+
+    ffc_reserved->frames.push_back(_buf);
+
+    pthread_cond_signal(&ffc_reserved->read_cond);
+}
+
