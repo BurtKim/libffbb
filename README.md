@@ -7,7 +7,7 @@ http://supportforums.blackberry.com/t5/Native-Development/Camera-API-NV12-frame-
 
 FFmeg is a required library for libffcamapi. FFmpeg carries the LGPL-v2.1 license, unless H.264 is enabled, in which case it uses GPL.
 
-Included with libffcamapi are prebuilt library files using the LGPL-v2.1 license. Listed below are some quick instructions for rebuilding the library for both armle-v7 and x86.
+Included with libffcamapi are prebuilt library files using the LGPL-v2.1 license. Listed below are some quick instructions for rebuilding FFmpeg for both armle-v7 and x86.
 
 ## Download FFmpeg
 
