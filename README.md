@@ -5,10 +5,12 @@ http://supportforums.blackberry.com/t5/Native-Development/Camera-API-NV12-frame-
 
 Download FFmpeg:
 
-	git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
+	$ # checkout using git
+	$ git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
 
-OR  
-[http://ffmpeg.org](http://ffmpeg.org)
+OR
+
+Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 
 Building FFmpeg:
 
