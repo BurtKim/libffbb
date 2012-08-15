@@ -3,7 +3,13 @@ Camera API add-on with FFmpeg support.
 Support forum post:  
 http://supportforums.blackberry.com/t5/Native-Development/Camera-API-NV12-frame-to-AVFrame-FFmpeg/td-p/1842089
 
-Download FFmpeg:
+# Required Libraries
+
+FFmeg is a required library for libffcamapi. FFmpeg carries the LGPL-v2.1 license, unless H.264 is enabled, in which case it uses GPL.
+
+Included with libffcamapi are prebuilt library files using the LGPL-v2.1 license. Listed below are some quick instructions for rebuilding the library for both armle-v7 and x86.
+
+## Download FFmpeg
 
 	$ # checkout using git
 	$ git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
@@ -12,7 +18,7 @@ OR
 
 Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 
-Building FFmpeg:
+## Building FFmpeg
 
 	$ # build (shared) libs for armle-v7
 	$ ./configure --enable-cross-compile --cross-prefix=arm-unknown-nto-qnx8.0.0eabi- --arch=armv7 --disable-debug --enable-optimizations --enable-asm --disable-static --enable-shared --target-os=qnx --disable-ffplay --disable-ffserver --disable-ffprobe --prefix=`pwd`/target  
@@ -22,7 +28,7 @@ Building FFmpeg:
 	$ ./configure --enable-cross-compile --cross-prefix=i486-pc-nto-qnx8.0.0- --arch=x86 --disable-debug --enable-static --disable-shared --target-os=qnx --disable-ffplay --disable-ffserver --disable-ffprobe --disable-yasm --prefix=`pwd`/target  
 	$ make install   
 
-Compiling against this library:
+# Compiling against this library
 
 	device {
 		ARCH = armle-v7
@@ -35,7 +41,7 @@ Compiling against this library:
 	
 	LIBS += -lcamapi -L../ffmpeg/lib/$${ARCH} -lavformat -lavcodec -lavutil
 
-Building BAR:
+# Building BAR
 
 	<!-- include libs for armle-v7 -->
 	<asset path="ffmpeg/lib/armle-v7/libavcodec.so.54">lib/libavcodec.so.54</asset>
