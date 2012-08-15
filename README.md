@@ -7,7 +7,7 @@ Download FFmpeg:
 
 	git clone git://source.ffmpeg.org/ffmpeg.git ffmpeg
 
-OR
+OR  
 [http://ffmpeg.org](http://ffmpeg.org)
 
 Building FFmpeg:
