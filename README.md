@@ -53,3 +53,7 @@ Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 	<asset path="ffmpeg/lib/x86/libavcodec.a">lib/libavcodec.a</asset>
 	<asset path="ffmpeg/lib/x86/libavformat.a">lib/libavformat.a</asset>
 	<asset path="ffmpeg/lib/x86/libavutil.a">lib/libavutil.a</asset>
+
+# License
+
+While FFmpeg is either LGPL-v2.1 or GPL depending on how it is built, libffcamapi uses Apache License, Version 2.0.
