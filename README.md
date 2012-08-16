@@ -28,7 +28,7 @@ Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 	$ ./configure --enable-cross-compile --cross-prefix=i486-pc-nto-qnx8.0.0- --arch=x86 --disable-debug --enable-static --disable-shared --target-os=qnx --disable-ffplay --disable-ffserver --disable-ffprobe --disable-yasm --prefix=`pwd`/target  
 	$ make install   
 
-# Compiling and Linking Against FFmpeg
+## Compiling against FFmpeg
 
 	device {
 		ARCH = armle-v7
@@ -42,7 +42,7 @@ Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 	INCLUDEPATH += ../ffmpeg/include
 	LIBS += -lcamapi -L../ffmpeg/lib/$${ARCH} -lavformat -lavcodec -lavutil
 
-# Including FFmpeg in the BAR
+## Including FFmpeg in the BAR
 
 	<!-- include libs for armle-v7 -->
 	<asset path="ffmpeg/lib/armle-v7/libavcodec.so.54">lib/libavcodec.so.54</asset>
