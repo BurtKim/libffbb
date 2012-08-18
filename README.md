@@ -58,7 +58,7 @@ Visit the website at: [http://ffmpeg.org](http://ffmpeg.org)
 
 # H.264 Optional Support
 
-FFmpeg support h.264 using the GPL library libx264. Included with libffcamapi is the libx264 source and prebuilt library files.
+FFmpeg supports h.264 using the GPL library libx264. Included with libffcamapi is the libx264 source and prebuilt library files.
 
 ## Download libx264
 
