@@ -64,7 +64,7 @@ FFmpeg supports h.264 using the GPL library libx264. Included with libffcamapi i
 
 Visit the website at: [http://www.videolan.org](http://www.videolan.org/developers/x264.html)
 
-## Building FFmpeg
+## Building libx264
 
 	$ # build (shared) libs for armle-v7
 	$ ./configure --cross-prefix=arm-unknown-nto-qnx8.0.0eabi- --enable-shared --host=arm-linux --disable-cli --prefix=`pwd`/target
